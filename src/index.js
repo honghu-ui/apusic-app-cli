@@ -6,6 +6,9 @@ const path = require("path");
 const fs = require("fs-extra");
 const packageDependencies = require("../template/package/dependence.json");
 const packageJson = require("../template/package/package.json");
+const { exec } = require("child_process");
+const webpackTemplate = require("../template/webpack/webpack.config");
+
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -13,14 +16,15 @@ const rl = readline.createInterface({
 });
 
 /**
- * 安装目录
+ * 安装配置
  */
 const createOptions = {
     rootDir: '',  // 程序目录
     workDir: '', // 工作目录
     name: '',
     cssLoader: "sass",
-    packageFile: {}
+    packageFile: {},
+    typescript: false,
 };
 
 const greeting = chalk.white.bold("Welcome to apusic app create application!");
@@ -33,21 +37,24 @@ start();
 
 async function start() {
     initEnvironment();
-    const res1 = await setCss();
+    await setCss();
     setDependencies();
+    createWebpackConfig();
     copyFiles();
 
-    console.log(chalk.greenBright.bold("Success, please run npm or yarn install in your project."));
+    exec(`cd ${createOptions.workDir} && git init`, (err, stdout, stderr) => {
+        if (err) {
+            console.log(chalk.red("git init failed"));
+            return;
+        }
+
+        console.log(chalk.greenBright.bold("Success, please run npm or yarn install in your project."));
+    });
 }
 
 
 function initEnvironment() {
-    if (process.argv.length < 3) {
-        console.log(chalk.red("need project name"));
-        process.exit(-1);
-    }
-
-    if (!process.argv[2]) {
+    if (process.argv.length < 3 || !process.argv[2]) {
         console.log(chalk.red("need project name"));
         process.exit(-1);
     }
@@ -56,8 +63,13 @@ function initEnvironment() {
     createOptions.rootDir = path.resolve(__dirname, '../');
     createOptions.workDir = path.resolve(process.cwd(), createOptions.name);
 
+    //check typescript
+    if(process.argv.includes("--typescript")){
+        createOptions.typescript = true;
+    }
+
     if (fs.existsSync(createOptions.workDir)) {
-        console.log(chalk.red("project directory is exist!"));
+        console.log(chalk.red("project directory is already exist!"));
         process.exit(-1);
     }
 }
@@ -98,6 +110,7 @@ function setDependencies() {
         dependencies: packageDependencies.dependencies,
         devDependencies: {}
     };
+
     if (createOptions.cssLoader === 'sass') {
         merge.devDependencies = Object.assign({}, packageDependencies.devDependencies, packageDependencies.sass);
     }
@@ -117,39 +130,70 @@ function setDependencies() {
     writer.close();
 }
 
+function createWebpackConfig(){
+    let template = webpackTemplate.template;
+    const outputFile =  path.resolve(createOptions.workDir, 'webpack.config.js');
+
+    if(createOptions.cssLoader === 'less'){
+        template = template.replace(/sass-loader/g, "less-loader");
+        template = template.replace(/scss/g, "less");
+    }
+
+    if(createOptions.typescript){
+        template = template.replace(/index.jsx/g, "index.tsx");
+    }
+
+    // copy sass webpack.config.js
+    let writer = fs.createWriteStream(outputFile);
+    writer.write(template);
+    writer.close();
+}
+
 /**
  * 拷贝关键模板
  */
 function copyFiles(){
     const src = {
         tsConfig: path.resolve(createOptions.rootDir, 'template/tsconfig.json'),
-        webpackConfig: path.resolve(createOptions.rootDir, 'template/webpack/webpack.config.js'),
         babelConfig:  path.resolve(createOptions.rootDir, 'template/.babelrc'),
         typeConfig:  path.resolve(createOptions.rootDir, 'template/declaration.d.ts'),
-        sourceDir: path.resolve(createOptions.rootDir, 'template/js'),
         publicDir: path.resolve(createOptions.rootDir, 'template/public'),
+        eslintConfig: path.resolve(createOptions.rootDir, 'template/.eslintrc'),
+        gitIgnoreConfig: path.resolve(createOptions.rootDir, 'template/.gitignore'),
     };
+
+    if(createOptions.typescript){
+        src.sourceDir = path.resolve(createOptions.rootDir, 'template/ts')
+    } else {
+        src.sourceDir = path.resolve(createOptions.rootDir, 'template/js')
+    }
 
     const des = {
         tsConfig: path.resolve(createOptions.workDir, 'tsconfig.json'),
-        webpackConfig: path.resolve(createOptions.workDir, 'webpack.config.js'),
         babelConfig:  path.resolve(createOptions.workDir, '.babelrc'),
         typeConfig:  path.resolve(createOptions.workDir, 'declaration.d.ts'),
         sourceDir: path.resolve(createOptions.workDir, 'src'),
         publicDir: path.resolve(createOptions.workDir, 'public'),
+        eslintConfig: path.resolve(createOptions.workDir, '.eslintrc'),
+        gitIgnoreConfig: path.resolve(createOptions.workDir, '.gitignore'),
     };
 
-    // copy tsconfig.json
-    fs.copySync(src.tsConfig, des.tsConfig);
+    if(createOptions.typescript){
+        // copy tsconfig.json
+        fs.copySync(src.tsConfig, des.tsConfig);
 
-    // copy sass webpack.config.js
-    fs.copySync(src.webpackConfig, des.webpackConfig);
+        //copy types file
+        fs.copySync(src.typeConfig, des.typeConfig);
+    }
+
+    // copy git ignore
+    fs.copySync(src.gitIgnoreConfig, des.gitIgnoreConfig);
 
     // copy babelrc
     fs.copySync(src.babelConfig, des.babelConfig);
 
-    //copy types file
-    fs.copySync(src.typeConfig, des.typeConfig);
+    //copy eslint file
+    fs.copySync(src.eslintConfig, des.eslintConfig);
 
     // copy source files
     if (!fs.existsSync(des.sourceDir)){

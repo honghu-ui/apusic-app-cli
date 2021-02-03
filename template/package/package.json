@@ -6,5 +6,13 @@
     "dev": "webpack serve"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css}": ["eslint"]
+  }
 }

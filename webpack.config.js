@@ -1,4 +1,4 @@
-const template = `
+
 const path = require('path');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -6,7 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
     mode: 'development',
     entry: {
-        index: path.resolve(__dirname, './src/index.jsx'),
+        index: path.resolve(__dirname, './src/index.tsx'),
     },
     output: {
         path: path.resolve(__dirname, './dist'),
@@ -30,11 +30,11 @@ module.exports = {
                         loader: 'css-loader',
                         options: {
                             sourceMap: true,
-                            modules: false
+                            modules: true
                         }
                     },
                     {
-                        loader: 'sass-loader',
+                        loader: 'less-loader',
                         options: {
                             sourceMap: true
                         }
@@ -42,7 +42,7 @@ module.exports = {
                 ]
             },
             {
-                test:/\\.(png|jpg|gif|jpeg)/,
+                test:/\.(png|jpg|gif|jpeg)/,
                 exclude: /node_modules/,
                 use:[{
                     loader:'url-loader',
@@ -52,7 +52,7 @@ module.exports = {
                 }]
             },
             {
-                test: /\\.(woff|woff2|ttf|eot|svg)$/,
+                test: /\.(woff|woff2|ttf|eot|svg)$/,
                 exclude: /node_modules/,
                 use: [
                     {
@@ -75,8 +75,4 @@ module.exports = {
     resolve: {
         extensions: ['.js', '.ts', '.jsx', '.tsx']
     }
-};`;
-
-module.exports = {
-    template
-}
+};
