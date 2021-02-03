@@ -1,6 +1,6 @@
 {
   "name": "apusic-app-cli",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "apusic react app cli",
   "main": "src/index.js",
   "bin": {
