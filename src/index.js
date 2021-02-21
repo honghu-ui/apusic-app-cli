@@ -159,7 +159,7 @@ function copyFiles(){
         typeConfig:  path.resolve(createOptions.rootDir, 'template/declaration.d.ts'),
         publicDir: path.resolve(createOptions.rootDir, 'template/public'),
         eslintConfig: path.resolve(createOptions.rootDir, 'template/.eslintrc'),
-        gitIgnoreConfig: path.resolve(createOptions.rootDir, 'template/.gitignore'),
+        gitIgnoreConfig: path.resolve(createOptions.rootDir, 'template/gitignore.tpl'),
     };
 
     if(createOptions.typescript){
