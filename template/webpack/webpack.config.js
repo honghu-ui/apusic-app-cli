@@ -2,6 +2,7 @@ const template = `
 const path = require('path');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
     mode: 'development',
@@ -63,6 +64,9 @@ module.exports = {
         ]
     },
     plugins: [
+        new webpack.HotModuleReplacementPlugin({
+            // Options...
+        }),
         new MiniCssExtractPlugin({
             filename: 'css/[name].css',
             chunkFilename: '[id].css',
@@ -74,6 +78,13 @@ module.exports = {
     ],
     resolve: {
         extensions: ['.js', '.ts', '.jsx', '.tsx']
+    },
+    devServer: {
+        host: '127.0.0.1',
+        historyApiFallback: true,
+        hot: true,
+        inline: true,
+        port: 9000
     }
 };`;
 

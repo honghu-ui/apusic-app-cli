@@ -28,10 +28,10 @@ const createOptions = {
 };
 
 const greeting = chalk.white.bold("Welcome to apusic app create application!");
+const info = chalk.greenBright.bold(`Working dir is ${process.cwd()}`);
 
-const warning = chalk.white.bold("(we only support react temporarily.)");
-
-console.log(greeting, warning);
+console.log(greeting);
+console.log(info);
 
 start();
 
@@ -55,7 +55,7 @@ async function start() {
 
 function initEnvironment() {
     if (process.argv.length < 3 || !process.argv[2]) {
-        console.log(chalk.red("need project name"));
+        console.log(chalk.red("please input project name"));
         process.exit(-1);
     }
 
@@ -82,21 +82,22 @@ async function setCss() {
     const cssLoaders = ["less", "sass"];
     const cssText = cssLoaders.join(",");
 
-    const inputCssCompileText = chalk.white.bold(`please input css loader: (${cssText}) ${os.EOL}`);
+    const inputCssCompileText = chalk.white.bold(`please input css loader(default sass): (${cssText}) ${os.EOL}`);
 
     return await new Promise(resolve => {
         rl.question(inputCssCompileText, answer => {
-            if (cssLoaders.includes(answer)) {
+            if(answer === '') {
+                createOptions.cssLoader = 'sass';
+            }else if (cssLoaders.includes(answer)) {
                 createOptions.cssLoader = answer;
             } else {
                 const invalid = chalk.red("invalid css compile!");
-                console.log(invalid);
+                console.error(invalid);
                 rl.close();
                 process.exit(-1);
             }
 
             rl.close();
-
             resolve(answer);
         })
     });
@@ -117,6 +118,10 @@ function setDependencies() {
 
     if (createOptions.cssLoader === 'less') {
         merge.devDependencies = Object.assign({}, packageDependencies.devDependencies, packageDependencies.less);
+    }
+
+    if (createOptions.typescript) {
+        merge.devDependencies = Object.assign({}, packageDependencies.devDependencies, packageDependencies.ts);
     }
 
     createOptions.packageFile = Object.assign(packageJson, merge);
